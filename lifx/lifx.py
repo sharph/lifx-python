@@ -16,14 +16,16 @@ class LIFXBulb:
         self.recv_lightstatus(lightstatus)
 
     def __str__(self):
-        addr = str(hexlify(self.addr), encoding='utf-8')
         return "<LIFXBulb %s hue:%s sat:%s bright:%s kelvin:%s on:%s>" % \
-               (addr,
+               (self.get_addr(),
                 inttohex(self.hue),
                 inttohex(self.saturation),
                 inttohex(self.brightness),
                 self.kelvin,
                 self.power)
+
+    def get_addr(self):
+        return str(hexlify(self.addr), encoding='utf-8')
 
     def deliverpacket(self, packet):
         if isinstance(packet.payload, packetcodec.LightStatusPayload):
