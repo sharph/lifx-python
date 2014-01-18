@@ -57,21 +57,21 @@ if now < sun['dawn']:
     target = night_kelvin
 elif now < sun['sunrise']:
     period = 'sunrise'
-    total_seconds = (sun['sunrise'] - sun['dawn']).total_seconds
-    time_since_dawn = (now - sun['dawn']).total_seconds
+    total_seconds = (sun['sunrise'] - sun['dawn']).total_seconds()
+    time_since_dawn = (now - sun['dawn']).total_seconds()
     difference = day_kelvin - night_kelvin
-    target = night_kelvin + \
-             (float(time_since_dawn) / float(total_seconds) * difference)
+    target = int(night_kelvin + \
+             (float(time_since_dawn) / float(total_seconds) * difference))
 elif now < sun['sunset']:
     period = 'day'
     target = day_kelvin
 elif now < sun['dusk']:
     period = 'sunset'
-    total_seconds = (sun['dusk'] - sun['sunset']).total_seconds
-    time_since_sunset = (now - sun['sunset']).total_seconds
+    total_seconds = (sun['dusk'] - sun['sunset']).total_seconds()
+    time_since_sunset = (now - sun['sunset']).total_seconds()
     difference = night_kelvin - day_kelvin
-    target = day_kelvin + \
-             (float(time_since_sunset) / float(total_seconds) * difference)
+    target = int(day_kelvin + \
+             (float(time_since_sunset) / float(total_seconds) * difference))
 else:
     period = 'night'
     target = night_kelvin
