@@ -15,6 +15,6 @@ sock.bind((UDP_IP, UDP_PORT))
 while True:
     data, addr = sock.recvfrom(1024)
     packet = packetcodec.decode_packet(data)
-    print addr, unicode(packet)
+    print(addr, unicode(packet))
     pprint(packet.payload.data)
 
