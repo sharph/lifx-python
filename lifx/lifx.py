@@ -15,7 +15,7 @@ class LIFXBulb:
     def __init__(self, lightstatus):
         self.recv_lightstatus(lightstatus)
 
-    def __str__(self):
+    def __repr__(self):
         return "<LIFXBulb %s hue:%s sat:%s bright:%s kelvin:%s on:%s>" % \
                (self.get_addr(),
                 inttohex(self.hue),
