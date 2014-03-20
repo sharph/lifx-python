@@ -3,7 +3,7 @@
 import socket
 import struct
 from binascii import hexlify
-from time import time
+from time import time, sleep
 
 from . import packetcodec
 
@@ -23,13 +23,20 @@ def connect():
     p = packetcodec.Packet(packetcodec.GetPANGatewayPayload())
     for x in range(5):
         udpsock.sendto(bytes(p), (BCAST, PORT))
-    while True:
-        data, addr = udpsock.recvfrom(1024)
-        packet = packetcodec.decode_packet(data)
-        if packet is not None and \
-                isinstance(packet.payload, packetcodec.PANGatewayPayload):
-            break
+    for x in range(10):
+        try:
+            udpsock.settimeout(0.2)
+            data, addr = udpsock.recvfrom(1024)
+            packet = packetcodec.decode_packet(data)
+            if packet is not None and \
+                    isinstance(packet.payload, packetcodec.PANGatewayPayload):
+                break
+        except socket.timeout:
+            pass
     udpsock.close()
+    if not isinstance(packet.payload, packetcodec.PANGatewayPayload):
+        connection = None
+        return
     if debug:
         print('found light: %s' % (addr[0], ))
     tcpsock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -45,6 +52,11 @@ def sendpacket(p):
     global connection, site
     if connection is None:
         connect()
+    if connection is None:
+        if debug:
+            print(p)
+            print("Packet not sent!")
+        return
     p.site = site
     if debug:
         print(p)
@@ -54,6 +66,8 @@ def recvpacket(timeout = None):
     global connection
     if connection is None:
         connect()
+    if connection is None:
+        return None
     connection.settimeout(timeout)
     try:
         lengthdatum, addr = connection.recvfrom(2)
