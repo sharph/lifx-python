@@ -113,8 +113,9 @@ def listen_and_interpret(sec, desired = None, target = None):
 def get_lights():
     global lights
     p = packetcodec.Packet(packetcodec.GetLightStatePayload())
-    network.sendpacket(p)
-    listen_and_interpret(2)
+    for x in range(4):
+        network.sendpacket(p)
+        listen_and_interpret(0.5)
     return list(lights.values())
 
 def clear_buffer():

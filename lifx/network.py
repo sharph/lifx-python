@@ -89,7 +89,7 @@ def listenforpackets(seconds, desired = None, target = None):
     start = time()
     packets = []
     while time() - start < seconds:
-        p = recvpacket(0.2)
+        p = recvpacket(0.1)
         if p is not None:
             packets.append(p)
             if desired is not None and isinstance(p.payload, desired):
