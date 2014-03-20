@@ -8,5 +8,6 @@ setup(name='lifx',
       author='Sharp Hall',
       author_email='sh@sauropod.org',
       url='https://github.com/sharph/lifx-python',
-      packages=['lifx']
+      packages=['lifx'],
+      license='AGPLv3'
      )
