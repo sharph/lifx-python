@@ -21,21 +21,23 @@ program = [ [ [ 0xb693, 0xffff, 0x0000, 3500, 0 ],
               15 ] ]
 
 lights = lifx.get_lights()
-
-lights[0].set_power(True)
-if len(lights) > 1:
-    lights[1].set_power(True)
+if len(lights):
+    lights[0].set_power(True)
+    if len(lights) > 1:
+        lights[1].set_power(True)
 
 for step in program:
-    lights[0].set_color(*step[0])
-    if len(lights) > 1:
-        lights[1].set_color(*step[1])
+    if len(lights):
+        lights[0].set_color(*step[0])
+        if len(lights) > 1:
+            lights[1].set_color(*step[1])
     print(step[2])
     start = time()
     while time() - start < step[3]:
         lifx.pause(3)
-        lights[0].get_state()
-        print(lights[0])
-        if len(lights) > 1:
-            lights[1].get_state()
-            print(lights[1])
+        if len(lights):
+            lights[0].get_state()
+            print(lights[0])
+            if len(lights) > 1:
+                lights[1].get_state()
+                print(lights[1])
