@@ -2,7 +2,5 @@
 
 import lifx
 
-addr = b'\00\00\00\00\00\00'
-
-lifx.set_power(addr, True)
+lifx.set_power(lifx.BCAST, True)
 

@@ -4,6 +4,8 @@ from binascii import hexlify as tohex
 
 from .lifxconstants import *
 
+BCAST = b'\00\00\00\00\00\00'
+
 class Packet:
     def __init__(self, payload = None):
         self.size = 0
