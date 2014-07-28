@@ -18,11 +18,11 @@ class Packet:
         else:
             self.payload = payload
 
-    def __repr__(self):
+    def __str__(self):
         return('<packet proto:%s, target:%s, site:%s, type:%s>' %
-               (str(tohex(pack('>H', self.proto)), encoding='utf-8'),
-                str(tohex(self.target), encoding='utf-8'),
-                str(tohex(self.site), encoding='utf-8'),
+               (unicode(tohex(pack('>H', self.proto)), encoding='utf-8'),
+                unicode(tohex(self.target), encoding='utf-8'),
+                unicode(tohex(self.site), encoding='utf-8'),
                 self.payload.name ))
 
     def __bytes__(self):
@@ -61,8 +61,8 @@ class LIFXPayload:
 
     def decode(self, bs):
         if len(bs) != calcsize(self.pack_str):
-            print('could not decode %s' % (self.name, ))
-            print(tohex(bs))
+            print( 'could not decode %s' % (self.name, ) )
+            print( tohex(bs))
             return
         data = unpack(self.pack_str, bs)
         self.data = dict( zip(self.pack_struct, data) )
@@ -122,7 +122,62 @@ class PowerStatePayload(SetPowerStatePayload):
     name = 'Power state'
     packet_type = POWER_STATE
 
-    
+class GetTimeStatePayload(LIFXPayload):
+    name = 'Get time state'
+    packet_type = GET_TIME
+
+class SetTimeStatePayload(LIFXPayload):
+    name = 'Set time state'
+    packet_type = SET_TIME
+    pack_str = '<Q'
+    pack_struct = ['time']
+
+class TimeStatePayload(LIFXPayload):
+    name = 'Time state'
+    packet_type = TIME_STATE
+    pack_str = '<Q'
+    pack_struct = ['time']
+
+class GetBulbLabelPayload(LIFXPayload):
+    name = "GetBulbLabel"
+    packet_type = GET_BULB_LABEL
+
+class SetBulbLabelPayload(LIFXPayload):
+    name = "SetBulbLabel"
+    packet_type = SET_BULB_LABEL
+    pack_str = '<32s'
+    pack_struct = ['bulb_label']
+
+class BulbLabelPayload(LIFXPayload):
+    name = "BulbLabel"
+    packet_type = BULB_LABEL
+    pack_str = '<32s'
+    pack_struct = ['bulb_label']
+
+class GetVersionPayload(LIFXPayload):
+    name = "Get version"
+    packet_type = GET_VERSION
+
+class VersionStatePayload(LIFXPayload):
+    name = "Version state"
+    packet_type = VERSION_STATE
+    pack_str = '<LLL'
+    pack_struct = ['vendor',
+                   'product',
+                   'version']
+
+class GetInfoPayload(LIFXPayload):
+    name = "Get info"
+    packet_type = GET_INFO
+
+class InfoStatePayload(LIFXPayload):
+    name = "Info state"
+    packet_type = INFO_STATE
+    pack_str = '<QQQ'
+    pack_struct = ['time',
+                   'uptime',
+                   'downtime']
+
 def decode_packet(data):
     mapping = {GET_PAN_GATEWAY: GetPANGatewayPayload,
                PAN_GATEWAY: PANGatewayPayload,
@@ -131,7 +186,18 @@ def decode_packet(data):
                LIGHT_STATUS: LightStatusPayload,
                GET_POWER_STATE: GetPowerStatePayload,
                SET_POWER_STATE: GetPowerStatePayload,
-               POWER_STATE: PowerStatePayload}
+               POWER_STATE: PowerStatePayload,
+               GET_TIME: GetTimeStatePayload,
+               SET_TIME: SetTimeStatePayload,
+               GET_BULB_LABEL: GetBulbLabelPayload,
+               SET_BULB_LABEL: SetBulbLabelPayload,
+               BULB_LABEL: BulbLabelPayload,
+               TIME_STATE: TimeStatePayload,
+               GET_VERSION: GetVersionPayload,
+               VERSION_STATE: VersionStatePayload,
+               GET_INFO: GetInfoPayload,
+               INFO_STATE: InfoStatePayload}
+
     if len(data) < 36:
         return None
     p = Packet()
