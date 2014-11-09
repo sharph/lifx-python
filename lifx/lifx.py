@@ -4,6 +4,7 @@ from . import packetcodec
 import socket
 from time import clock
 from binascii import hexlify, unhexlify
+from datetime import datetime
 import struct
 
 lights = {}
@@ -15,7 +16,7 @@ class LIFXBulb:
     def __init__(self, lightstatus):
         self.recv_lightstatus(lightstatus)
 
-    def __repr__(self):
+    def __str__(self):
         return "<LIFXBulb %s hue:%s sat:%s bright:%s kelvin:%s on:%s>" % \
                (self.get_addr(),
                 inttohex(self.hue),
@@ -32,6 +33,14 @@ class LIFXBulb:
             self.recv_lightstatus(packet)
         elif isinstance(packet.payload, packetcodec.PowerStatePayload):
             self.recv_powerstate(packet)
+        elif isinstance(packet.payload, packetcodec.BulbLabelPayload):
+            self.recv_bulblabelstate(packet)
+        elif isinstance(packet.payload, packetcodec.TimeStatePayload):
+            self.recv_timestate(packet)
+        elif isinstance(packet.payload, packetcodec.VersionStatePayload):
+            self.recv_versionstate(packet)
+        elif isinstance(packet.payload, packetcodec.InfoStatePayload):
+            self.recv_infostate(packet)
 
     def recv_lightstatus(self, lightstatus):
         self.addr = lightstatus.target
@@ -54,6 +63,25 @@ class LIFXBulb:
         else:
             self.power = False
 
+    def recv_bulblabelstate(self, labelstate):
+        self.bulb_label = str(labelstate.payload.data['bulb_label'],
+                              encoding='utf-8').strip('\00')
+
+    def recv_timestate(self, timestate):
+        self.time = timestate.payload.data['time']
+        self.update_datetime()
+
+    def recv_versionstate(self, versionstate):
+        self.vendor = versionstate.payload.data['vendor']
+        self.product = versionstate.payload.data['product']
+        self.version = versionstate.payload.data['version']
+
+    def recv_infostate(self, infostate):
+        self.time = infostate.payload.data['time']
+        self.uptime = infostate.payload.data['uptime']
+        self.downtime = infostate.payload.data['downtime']
+        self.update_datetime()
+
     def get_state(self):
         clear_buffer()
         p = packetcodec.Packet(packetcodec.GetLightStatePayload())
@@ -63,10 +91,55 @@ class LIFXBulb:
 
     def set_power(self, power):
         set_power(self.addr, power)
-        listen_and_interpret(5, packetcodec.PowerStatePayload, self.addr)
+        #listen_and_interpret(5, packetcodec.PowerStatePayload, self.addr)
 
     def set_color(self, hue, saturation, brightness, kelvin, fade_time):
         set_color(self.addr, hue, saturation, brightness, kelvin, fade_time)
+
+    def get_label(self):
+        clear_buffer()
+        p = packetcodec.Packet(packetcodec.GetBulbLabelPayload())
+        p.target = self.addr
+        network.sendpacket(p)
+        listen_and_interpret(5, packetcodec.BulbLabelPayload, self.addr)
+
+    def set_label(self, label):
+        label = bytearray(label, encoding="utf-8")[0:32]
+
+        if len(label) == 0:
+            return
+
+        clear_buffer()
+        p = packetcodec.Packet(packetcodec.SetBulbLabelPayload())
+        p.payload.data['bulb_label'] = label
+        p.target = self.addr
+        network.sendpacket(p)
+        clear_buffer()
+
+    def update_datetime(self):
+        self.datetime = datetime.fromtimestamp(self.time / 1e+9)
+
+    def get_time(self):
+        p = packetcodec.Packet(packetcodec.GetTimeStatePayload())
+        p.target = self.addr
+        clear_buffer()
+        network.sendpacket(p)
+        listen_and_interpret(5, packetcodec.TimeStatePayload, self.addr)
+
+    def get_version(self):
+        p = packetcodec.Packet(packetcodec.GetVersionPayload())
+        p.target = self.addr
+        clear_buffer()
+        network.sendpacket(p)
+        listen_and_interpret(5, packetcodec.VersionStatePayload, self.addr)
+
+    def get_info(self):
+        p = packetcodec.Packet(packetcodec.GetInfoPayload())
+        p.target = self.addr
+        clear_buffer()
+        network.sendpacket(p)
+        listen_and_interpret(5, packetcodec.InfoStatePayload, self.addr)
+
 
 def sanitize_addr(addr):
     if len(addr) > 6:
@@ -113,9 +186,8 @@ def listen_and_interpret(sec, desired = None, target = None):
 def get_lights():
     global lights
     p = packetcodec.Packet(packetcodec.GetLightStatePayload())
-    for x in range(4):
-        network.sendpacket(p)
-        listen_and_interpret(0.5)
+    network.sendpacket(p)
+    listen_and_interpret(2)
     return list(lights.values())
 
 def clear_buffer():
